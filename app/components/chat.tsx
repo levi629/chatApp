@@ -1,7 +1,7 @@
-// src/components/Chat.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../supanbase'; // Таны supabase client-ийг зөв импортлох
+import { supabase } from '../supanbase';
+import Navbar from './navbar';
 
 interface Message {
   chid: number;
@@ -10,10 +10,16 @@ interface Message {
   uid: string;
 }
 
+interface User {
+  uid: string;
+  uname?: string;
+}
+
 export default function Chat() {
   const { rid } = useParams();
   const [roomName, setRoomName] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -26,25 +32,22 @@ export default function Chat() {
   useEffect(() => {
     if (!rid) return;
 
-    // Хэрэглэгчийн ID-г авах
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) setUserId(user.id);
     });
 
-    // Room-н нэрийг авах
-    supabase
-      .from('t_rooms')
-      .select('rname')
-      .eq('rid', rid)
-      .single()
-      .then(({ data }) => {
-        if (data) setRoomName(data.rname);
-      });
+    // Room-н нэр авах
+    supabase.from('t_rooms').select('rname').eq('rid', rid).single().then(({ data }) => {
+      if (data) setRoomName(data.rname);
+    });
 
-    // Одоогийн мессежүүдийг татах
+    // Room-д холбогдсон хэрэглэгчид авах (жишээ)
+    fetchRoomUsers();
+
+    // Мессежүүд татах
     fetchMessages();
 
-    // Realtime subscribe хийх (room тус бүрт channel үүсгэх)
+    // Realtime subscribe
     const channel = supabase
       .channel(`room_chats_${rid}`)
       .on(
@@ -56,24 +59,17 @@ export default function Chat() {
           filter: `rid=eq.${rid}`,
         },
         (payload) => {
-          console.log('Realtime message ирлээ:', payload.new);
           const msg = payload.new as Message;
           setMessages((prev) => [...prev, msg]);
         }
       )
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Realtime subscribe амжилттай:', rid);
-        }
-      });
+      .subscribe();
 
-    // Cleanup: channel-ийг устгах
     return () => {
       supabase.removeChannel(channel);
     };
   }, [rid]);
 
-  // Мессежүүдийг татах функц
   async function fetchMessages() {
     const { data, error } = await supabase
       .from('t_chats')
@@ -81,13 +77,33 @@ export default function Chat() {
       .eq('rid', rid)
       .order('chdate', { ascending: true });
 
-    if (error) {
-      console.error('Мессеж татахад алдаа:', error.message);
-    }
+    if (error) console.error(error);
     if (data) setMessages(data);
   }
 
-  // Мессеж илгээх функц
+  // Жишээ - Room-д холбогдсон хэрэглэгчдийг авах
+  async function fetchRoomUsers() {
+    if (!rid) return;
+    // t_rooms_users гэх таблиц гэж байгаа гэж үзье, uid болон uname-г join-ээр авна
+    const { data, error } = await supabase
+      .from('t_rooms_users')
+      .select('uid, t_users(uname)')
+      .eq('rid', rid);
+
+    if (error) {
+      console.error('Room хэрэглэгчдийг авахад алдаа:', error.message);
+      return;
+    }
+
+    if (data) {
+      const usersList = data.map((ru: any) => ({
+        uid: ru.uid,
+        uname: ru.t_users?.uname,
+      }));
+      setUsers(usersList);
+    }
+  }
+
   async function sendMessage() {
     if (!newMessage.trim() || !userId || !rid) return;
 
@@ -118,19 +134,14 @@ export default function Chat() {
         backgroundColor: '#f4f6fb',
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          padding: '1rem 1.5rem',
-          backgroundColor: '#2c2625',
-          borderBottom: '1px solid #ddd',
-          fontSize: '18px',
-          fontWeight: 600,
-          color: '#fff',
-        }}
-      >
-        💬 Room: {roomName}
-      </div>
+      {/* Тусдаа Navbar компонент дуудаж байна */}
+      <Navbar
+        roomName={roomName}
+        roomId={rid}
+        onAddUserClick={() => alert('Хүн нэмэхийг энд хэрэгжүүлнэ үү')}
+        onUserClick={(uid) => alert('User clicked: ' + uid)}
+        users={users}
+      />
 
       {/* Messages */}
       <div
@@ -208,6 +219,7 @@ export default function Chat() {
             border: '1px solid #ccc',
             outline: 'none',
             fontSize: '15px',
+            color: '#ccc',
           }}
         />
         <button
