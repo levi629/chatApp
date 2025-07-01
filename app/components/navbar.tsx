@@ -64,10 +64,10 @@ export default function Navbar({
 
             {users.map((user) => (
               <button
-                key={user.uid}
-                onClick={() => {
-                  if (roomId) navigate(`/room/join/${roomId}`);
-                }}
+                key={user.uid}  
+                // onClick={() => {
+                //   if (roomId) navigate(`/room/join/${roomId}`);
+                // }}
                 className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300"
               >
                 {user.uname || user.uid.slice(0, 6)}

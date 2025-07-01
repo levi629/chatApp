@@ -110,26 +110,25 @@ export default function Login() {
       >
         Нэвтрэх
       </button>
-        <button
-          onClick={() => navigate('/register')} // Функцээр дамжуулна
-          style={{
-            width: '100%',
-            padding: '14px',
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: '#3d5afe',
-            color: 'white',
-            fontWeight: '600',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2f43d6')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3d5afe')}
-        >
-          Бүртгүүлэх
-        </button>
+      <button
+        onClick={() => navigate('/register')}
+        style={loginBtnStyle}
+        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e2e6f9')}
+        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+      >
+        Бүртгүүлэх
+      </button>
 
     </div>
   );
 }
+const loginBtnStyle: React.CSSProperties = {
+  backgroundColor: 'transparent',
+  border: 'none',
+  color: '#3d5afe',
+  cursor: 'pointer',
+  fontWeight: '600',
+  fontSize: '1rem',
+  textDecoration: 'underline',
+  padding: '0',
+};

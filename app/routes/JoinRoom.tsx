@@ -45,7 +45,7 @@ export default function JoinRoom() {
 
     // Room-д нэмэх
     const { error } = await supabase
-      .from('t_rooms_users')
+      .from('t_rooms_users')    
       .insert([{ rid: roomId, uid: user.id, lastchat: new Date().toISOString() }]);
 
     if (error) {

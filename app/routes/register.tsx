@@ -187,6 +187,6 @@ const loginBtnStyle: React.CSSProperties = {
   cursor: 'pointer',
   fontWeight: '600',
   fontSize: '1rem',
-  textDecoration: 'underline',
+  textDecoration: 'underline',  
   padding: '0',
 };

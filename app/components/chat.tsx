@@ -84,26 +84,41 @@ export default function Chat() {
   // Жишээ - Room-д холбогдсон хэрэглэгчдийг авах
   async function fetchRoomUsers() {
     if (!rid) return;
-    // t_rooms_users гэх таблиц гэж байгаа гэж үзье, uid болон uname-г join-ээр авна
-    const { data, error } = await supabase
+
+    // Алхам 1: t_rooms_users-ээс uid жагсаах
+    const { data: roomUsers, error } = await supabase
       .from('t_rooms_users')
-      .select('uid, t_users(uname)')
+      .select('uid')
       .eq('rid', rid);
 
     if (error) {
       console.error('Room хэрэглэгчдийг авахад алдаа:', error.message);
       return;
     }
-    console.log('Room хэрэглэгчид:', rid);
-    if (data) {
-      const usersList = data.map((ru: any) => ({
-        uid: ru.uid,
-        uname: ru.t_users?.uname,
-      }));
-      console.log("usersList:", usersList);
-      setUsers(usersList);
+
+    console.log('roomUsers:', roomUsers);
+
+    if (roomUsers && roomUsers.length > 0) {
+      const userIds = roomUsers.map((ru) => ru.uid);
+
+      // Алхам 2: t_users-оос uname авах
+      const { data: usersData, error: usersError } = await supabase
+        .from('t_users')
+        .select('uid, uname')
+        .in('uid', userIds);
+
+      if (usersError) {
+        console.error('t_users авахад алдаа:', usersError.message);
+        return;
+      }
+
+      console.log('usersData:', usersData);
+      setUsers(usersData || []);
+    } else {
+      setUsers([]);
     }
   }
+
 
   async function sendMessage() {
     if (!newMessage.trim() || !userId || !rid) return;
