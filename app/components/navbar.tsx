@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supanbase'; // Supabase client нэмэхээ мартав!
 
 interface NavbarProps {
   roomName: string;
@@ -25,13 +26,15 @@ export default function Navbar({
     setDropdownOpen(false);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
   return (
     <nav className="flex justify-between items-center px-6 py-4 bg-[#2c2625] border-b border-gray-700 text-white">
-      {/* Зүүн хэсэг: Room нэр */}
       <div className="text-lg font-semibold">💬 Room: {roomName || 'Unknown'}</div>
 
-
-      {/* 3 цэгийн dropdown */}
       <div className="relative">
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -42,7 +45,6 @@ export default function Navbar({
 
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded shadow-lg z-50">
-            {/* Invite линк хуулах */}
             <button
               onClick={handleInviteCopy}
               className="block w-full text-left px-4 py-3 hover:bg-gray-700 text-sm text-white"
@@ -50,7 +52,6 @@ export default function Navbar({
               🔗 Invite линк хуулах
             </button>
 
-            {/* Хэрэглэгчдийн жагсаалт */}
             <div className="px-4 py-2 border-t border-gray-600 text-gray-400 text-xs uppercase">
               Хэрэглэгчид
             </div>
@@ -72,6 +73,14 @@ export default function Navbar({
                 {user.uname || user.uid.slice(0, 6)}
               </button>
             ))}
+
+            {/* 🚪 Гарах товч */}
+            <button
+              onClick={handleLogout}
+              className="block w-full text-left px-4 py-3 hover:bg-red-700 text-sm text-red-400 border-t border-gray-600"
+            >
+              🚪 Гарах
+            </button>
           </div>
         )}
       </div>

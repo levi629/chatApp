@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supanbase';
 
@@ -8,6 +8,14 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [repassword, setRepassword] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        navigate('/');
+      }
+    });
+  }, []);
 
   const handleRegister = async () => {
     if (password !== repassword) {
