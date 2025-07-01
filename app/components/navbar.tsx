@@ -1,75 +1,79 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
   roomName: string;
   roomId: string | undefined;
   onAddUserClick: () => void;
-  onUserClick: (userId: string) => void;
-  users: { uid: string; uname?: string }[]; // Хэрэглэгчдийн жагсаалт
+  users: { uid: string; uname?: string }[];
 }
 
-export default function Navbar({ roomName, roomId, onAddUserClick, onUserClick, users }: NavbarProps) {
+export default function Navbar({
+  roomName,
+  roomId,
+  onAddUserClick,
+  users,
+}: NavbarProps) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
+  const handleInviteCopy = () => {
+    if (!roomId) return;
+    const link = `${window.location.origin}/room/join/${roomId}`;
+    navigator.clipboard.writeText(link);
+    alert('Invite линк хуулагдлаа:\n' + link);
+    setDropdownOpen(false);
+  };
+
   return (
-    <nav
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '1rem 1.5rem',
-        backgroundColor: '#2c2625',
-        borderBottom: '1px solid #ddd',
-        color: '#fff',
-        fontWeight: 600,
-        fontSize: '18px',
-      }}
-    >
+    <nav className="flex justify-between items-center px-6 py-4 bg-[#2c2625] border-b border-gray-700 text-white">
       {/* Зүүн хэсэг: Room нэр */}
-      <div>💬 Room: {roomName || 'Unknown'}</div>
+      <div className="text-lg font-semibold">💬 Room: {roomName || 'Unknown'}</div>
 
-      {/* Дунд хэсэг: Хүн нэмэх товч */}
-      <button
-        onClick={onAddUserClick}
-        style={{
-          backgroundColor: '#3d5afe',
-          border: 'none',
-          borderRadius: '8px',
-          color: 'white',
-          padding: '8px 14px',
-          cursor: 'pointer',
-          fontWeight: 600,
-          fontSize: '14px',
-        }}
-      >
-        Хүн нэмэх
-      </button>
 
-      {/* Баруун хэсэг: Хэрэглэгчдийн нэр, дарвал тухайн хүний room/join/[roomid] руу очно */}
-      <div style={{ display: 'flex', gap: '10px' }}>
-        {users.length === 0 && <div style={{ color: '#aaa' }}>Хэрэглэгч алга</div>}
-        {users.map((user) => (
-          <div
-            key={user.uid}
-            onClick={() => {
-              if (roomId) navigate(`/room/join/${roomId}?user=${user.uid}`);
-            }}
-            style={{
-              cursor: 'pointer',
-              backgroundColor: '#433c3b',
-              padding: '6px 10px',
-              borderRadius: '12px',
-              fontSize: '14px',
-              color: '#d0d0ff',
-              userSelect: 'none',
-              whiteSpace: 'nowrap',
-            }}
-            title={user.uname || user.uid}
-          >
-            {user.uname || user.uid.slice(0, 6)}
+      {/* 3 цэгийн dropdown */}
+      <div className="relative">
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="text-white text-2xl hover:text-gray-300 px-2"
+        >
+          ⋮
+        </button>
+
+        {dropdownOpen && (
+          <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded shadow-lg z-50">
+            {/* Invite линк хуулах */}
+            <button
+              onClick={handleInviteCopy}
+              className="block w-full text-left px-4 py-3 hover:bg-gray-700 text-sm text-white"
+            >
+              🔗 Invite линк хуулах
+            </button>
+
+            {/* Хэрэглэгчдийн жагсаалт */}
+            <div className="px-4 py-2 border-t border-gray-600 text-gray-400 text-xs uppercase">
+              Хэрэглэгчид
+            </div>
+
+            {users.length === 0 && (
+              <div className="px-4 py-2 text-gray-500 text-sm">
+                Хэрэглэгч алга
+              </div>
+            )}
+
+            {users.map((user) => (
+              <button
+                key={user.uid}
+                onClick={() => {
+                  if (roomId) navigate(`/room/join/${roomId}`);
+                }}
+                className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300"
+              >
+                {user.uname || user.uid.slice(0, 6)}
+              </button>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </nav>
   );

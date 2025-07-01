@@ -94,12 +94,13 @@ export default function Chat() {
       console.error('Room хэрэглэгчдийг авахад алдаа:', error.message);
       return;
     }
-
+    console.log('Room хэрэглэгчид:', rid);
     if (data) {
       const usersList = data.map((ru: any) => ({
         uid: ru.uid,
         uname: ru.t_users?.uname,
       }));
+      console.log("usersList:", usersList);
       setUsers(usersList);
     }
   }
@@ -155,44 +156,53 @@ export default function Chat() {
           backgroundColor: '#433c3b',
         }}
       >
-        {messages.map((msg) => {
-          const isMine = msg.uid === userId;
-          return (
-            <div
-              key={msg.chid}
-              style={{
-                alignSelf: isMine ? 'flex-end' : 'flex-start',
-                backgroundColor: isMine ? '#3d5afe' : '#ffffff',
-                color: isMine ? '#fff' : '#333',
-                padding: '12px 16px',
-                borderRadius: '18px',
-                maxWidth: '70%',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                position: 'relative',
-                wordBreak: 'break-word',
-              }}
-            >
-              {!isMine && (
-                <div
-                  style={{ fontSize: '13px', color: '#888', marginBottom: '4px' }}
-                >
-                  {msg.uid}
-                </div>
-              )}
-              <div>{msg.chtext}</div>
+      {messages.map((msg) => {
+        const isMine = msg.uid === userId;
+        const sender = users.find((u) => u.uid === msg.uid);
+        const senderName = sender?.uname || msg.uid.slice(0, 6);
+
+        return (
+          <div
+            key={msg.chid}
+            style={{
+              alignSelf: isMine ? 'flex-end' : 'flex-start',
+              backgroundColor: isMine ? '#3d5afe' : '#ffffff',
+              color: isMine ? '#fff' : '#333',
+              padding: '12px 16px',
+              borderRadius: '18px',
+              maxWidth: '70%',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              position: 'relative',
+              wordBreak: 'break-word',
+            }}
+          >
+            {!isMine && (
               <div
                 style={{
-                  fontSize: '11px',
-                  color: isMine ? '#d0dfff' : '#999',
-                  marginTop: '6px',
-                  textAlign: 'right',
+                  fontSize: '13px',
+                  color: '#888',
+                  marginBottom: '4px',
+                  fontWeight: 600,
                 }}
               >
-                {new Date(msg.chdate).toLocaleTimeString()}
+                {senderName}
               </div>
+            )}
+            <div>{msg.chtext}</div>
+            <div
+              style={{
+                fontSize: '11px',
+                color: isMine ? '#d0dfff' : '#999',
+                marginTop: '6px',
+                textAlign: 'right',
+              }}
+            >
+              {new Date(msg.chdate).toLocaleTimeString()}
             </div>
-          );
-        })}
+          </div>
+        );
+      })}
+
         <div ref={messagesEndRef} />
       </div>
 
