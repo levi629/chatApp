@@ -101,6 +101,26 @@ export default function Login() {
       >
         Нэвтрэх
       </button>
+        <button
+          onClick={() => navigate('/register')} // Функцээр дамжуулна
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: '#3d5afe',
+            color: 'white',
+            fontWeight: '600',
+            fontSize: '1rem',
+            cursor: 'pointer',
+            transition: 'background-color 0.3s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2f43d6')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3d5afe')}
+        >
+          Бүртгүүлэх
+        </button>
+
     </div>
   );
 }
