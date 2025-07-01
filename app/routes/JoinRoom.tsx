@@ -31,7 +31,6 @@ export default function JoinRoom() {
       return;
     }
 
-    // Хэрэглэгч аль хэдийн room-д байгаа эсэхийг шалгах
     const { data: existing } = await supabase
       .from('t_rooms_users')
       .select('*')
@@ -47,7 +46,7 @@ export default function JoinRoom() {
     // Room-д нэмэх
     const { error } = await supabase
       .from('t_rooms_users')
-      .insert([{ rid: roomId, uid: user.id }]);
+      .insert([{ rid: roomId, uid: user.id, lastchat: new Date().toISOString() }]);
 
     if (error) {
       alert('Room-д нэмэхэд алдаа гарлаа: ' + error.message);
