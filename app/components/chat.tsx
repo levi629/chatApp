@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../supanbase';
 import Navbar from './navbar';
@@ -23,31 +24,61 @@ export default function Chat() {
   const [newMessage, setNewMessage] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
+  const navigate = useNavigate();
   // Доошоо автоматаар скролл хийх
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  useEffect(() => {
-    if (!rid) return;
+useEffect(() => {
+  if (!rid) return;
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserId(user.id);
-    });
+  const init = async () => {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-    // Room-н нэр авах
-    supabase.from('t_rooms').select('rname').eq('rid', rid).single().then(({ data }) => {
-      if (data) setRoomName(data.rname);
-    });
+    if (userError || !userData?.user) {
+      navigate('/login');
+      return;
+    }
 
-    // Room-д холбогдсон хэрэглэгчид авах (жишээ)
+    const user = userData.user;
+
+    // Check if user exists in the room
+    const { data: roomUsers, error } = await supabase
+      .from('t_rooms_users')
+      .select('uid')
+      .eq('rid', rid)
+      .eq('uid', user.id);
+
+    if (error) {
+      console.error(error);
+      navigate('/');
+      return;
+    }
+
+    if (!roomUsers || roomUsers.length === 0) {
+      alert('Та энэ өрөөнд орох эрхгүй байна.');
+      navigate('/');
+      return;
+    }
+
+    // Allowed
+    setUserId(user.id);
+
+    // Room name fetch
+    supabase
+      .from('t_rooms')
+      .select('rname')
+      .eq('rid', rid)
+      .single()
+      .then(({ data }) => {
+        if (data) setRoomName(data.rname);
+      });
+
     fetchRoomUsers();
-
-    // Мессежүүд татах
     fetchMessages();
 
-    // Realtime subscribe
+    // Realtime
     const channel = supabase
       .channel(`room_chats_${rid}`)
       .on(
@@ -68,7 +99,11 @@ export default function Chat() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [rid]);
+  };
+
+  init();
+}, [rid]);
+
 
   async function fetchMessages() {
     const { data, error } = await supabase
@@ -154,6 +189,7 @@ export default function Chat() {
       <Navbar
         roomName={roomName}
         roomId={rid}
+        userId={userId}
         onAddUserClick={() => alert('Хүн нэмэхийг энд хэрэгжүүлнэ үү')}
         onUserClick={(uid) => alert('User clicked: ' + uid)}
         users={users}
@@ -174,7 +210,7 @@ export default function Chat() {
       {messages.map((msg) => {
         const isMine = msg.uid === userId;
         const sender = users.find((u) => u.uid === msg.uid);
-        const senderName = sender?.uname || msg.uid.slice(0, 6);
+        const senderName = sender?.uname || "Гарсан хэрэглэгч";
 
         return (
           <div

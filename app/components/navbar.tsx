@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supanbase'; // Supabase client нэмэхээ мартав!
+import { supabase } from '../supanbase'; 
+import { AiFillHome } from "react-icons/ai";
 
 interface NavbarProps {
   roomName: string;
   roomId: string | undefined;
+  userId: string | null; 
   onAddUserClick: () => void;
   users: { uid: string; uname?: string }[];
 }
@@ -14,6 +16,7 @@ export default function Navbar({
   roomId,
   onAddUserClick,
   users,
+  userId, // Add userId prop to track current user
 }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -26,17 +29,37 @@ export default function Navbar({
     setDropdownOpen(false);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
+const leaveRoom = async () => {
+  if (!roomId || !userId) return;
+
+  // t_rooms_users-оос хэрэглэгчийг хасах
+  const { error } = await supabase
+    .from('t_rooms_users')
+    .delete()
+    .eq('rid', roomId)
+    .eq('uid', userId);
+
+  if (error) {
+    console.error('Room-оос гарахад алдаа:', error.message);
+    alert('Room-оос гарахад алдаа гарлаа: ' + error.message);
+    return;
+  }
+
+  navigate('/');
+};
 
   return (
     <nav className="flex justify-between items-center px-6 py-4 bg-[#2c2625] border-b border-gray-700 text-white">
-      <div className="text-lg font-semibold">💬 Room: {roomName || 'Unknown'}</div>
+      
+      <button
+        onClick={() => navigate('/')}>
+      <AiFillHome />
+      </button>
+      <div className="text-lg font-semibold">💬 Өрөө: {roomName || 'Unknown'}</div>
 
       <div className="relative">
         <button
+        
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="text-white text-2xl hover:text-gray-300 px-2"
         >
@@ -70,16 +93,16 @@ export default function Navbar({
                 // }}
                 className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300"
               >
-                {user.uname || user.uid.slice(0, 6)}
+                {user.uname || "Гарсан хэрэглэгч"}
               </button>
             ))}
 
             {/* 🚪 Гарах товч */}
             <button
-              onClick={handleLogout}
+              onClick={leaveRoom}
               className="block w-full text-left px-4 py-3 hover:bg-red-700 text-sm text-red-400 border-t border-gray-600"
             >
-              🚪 Гарах
+              🚪 Өрөөнөс Гарах
             </button>
           </div>
         )}
